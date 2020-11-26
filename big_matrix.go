@@ -12,7 +12,7 @@ type BigMatrix struct {
     cryptosystem cryptosystem
 }
 
-// Create a new 0-index BigMatrix with the given size and data. Panics if size and data mismatch.
+// create a new BigMatrix with the given size and data, possible encrypted by cryptosystem cs (or nil)
 func NewBigMatrix(rows, cols int, data []*big.Int, cs cryptosystem) BigMatrix {
     if data == nil {
         data = make([]*big.Int, rows*cols)
@@ -34,6 +34,7 @@ func NewBigMatrix(rows, cols int, data []*big.Int, cs cryptosystem) BigMatrix {
     return m
 }
 
+// create a new BigMatrix from int values
 func NewBigMatrixFromInt(rows, cols int, data []int, cs cryptosystem) BigMatrix {
     if data == nil {
         return NewBigMatrix(rows, cols, nil, cs)
@@ -46,7 +47,7 @@ func NewBigMatrixFromInt(rows, cols int, data []int, cs cryptosystem) BigMatrix 
     return NewBigMatrix(rows, cols, s, cs)
 }
 
-// get value of BigMatrix m at (row, col)
+// get value at (row, col), where first row/col is 0.
 func (m BigMatrix) At(row, col int) *big.Int {
     if row >= m.rows || col >= m.cols || row < 0 || col < 0{
         panic(fmt.Sprintf("Index out of bounds: (%d, %d)", row, col))
@@ -55,7 +56,7 @@ func (m BigMatrix) At(row, col int) *big.Int {
     return m.values[valueIndex]
 }
 
-// set value of BigMatrix m at (row, col)
+// set value at (row, col), where first row/col is 0.
 func (m BigMatrix) Set(row, col int, value *big.Int) {
     if row >= m.rows || col >= m.cols || row < 0 || col < 0 {
         panic(fmt.Sprintf("Index out of bounds: (%d, %d)", row, col))
@@ -63,7 +64,9 @@ func (m BigMatrix) Set(row, col int, value *big.Int) {
     m.values[m.cols*row + col] = value
 }
 
-// matrix multiplication
+// multiply a * b
+// also handles multiplication of encrypted * unecrypted matrices or vice versa
+// if a and b are encrypted under different cryptosystems, the cryptosystem of a is used
 func (a BigMatrix) Multiply(b BigMatrix) (BigMatrix, error) {
     if a.cols != b.rows {
         panic("matrices a and b are not compatible")
@@ -108,14 +111,15 @@ func (a BigMatrix) Multiply(b BigMatrix) (BigMatrix, error) {
     return NewBigMatrix(cRows, cCols, values, a.cryptosystem), nil
 }
 
-// scalar multiplication of matrix
+// multiplication of a by a factor
 // assumes matrix and factor is in same space, otherwise use MultiplyPlaintextFactor
 func (a BigMatrix) MultiplyFactor(factor *big.Int) (BigMatrix, error) {
     two_val_mul := func (t1, t2 *big.Int) (*big.Int, error) {return a.cryptosystem.Multiply(t1, t2)}
     return scalarMultiplication(two_val_mul, a, factor)
 }
 
-// scalar multiplication for encrypted matrix * unencrypted factor
+// multiplication of a by a factor
+// to be used if a is encrypted while factor is not
 func (a BigMatrix) MultiplyPlaintextFactor(factor *big.Int) (BigMatrix, error) {
     return scalarMultiplication(a.cryptosystem.MultiplyFactor, a, factor)
 }
@@ -190,6 +194,7 @@ func (a BigMatrix) CropHorizontally(k int) BigMatrix {
     return NewBigMatrix(a.rows, k, vals, a.cryptosystem)
 }
 
+// apply Mod for all matrix elements
 func (a BigMatrix) Mod(mod *big.Int) BigMatrix {
     b_vals := make([]*big.Int, len(a.values))
     for i := range a.values {
