@@ -5,7 +5,7 @@ import (
 )
 
 type cryptosystem interface {
-    Add(...*big.Int) (*big.Int, error)
+    Add(*big.Int, *big.Int) (*big.Int, error)
     MultiplyFactor(ciphertext *big.Int, plaintext *big.Int) (*big.Int, error)
-    Multiply(...*big.Int) (*big.Int, error)
+    Multiply(*big.Int, *big.Int) (*big.Int, error)
 }

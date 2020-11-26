@@ -9,8 +9,8 @@ type dj_public_key struct {
     *tcpaillier.PubKey
 }
 
-func (pk dj_public_key) Add(terms ...*big.Int) (sum *big.Int, err error) {
-    return pk.PubKey.Add(terms...)
+func (pk dj_public_key) Add(a, b *big.Int) (sum *big.Int, err error) {
+    return pk.PubKey.Add(a, b)
 }
 
 func (pk dj_public_key) MultiplyFactor(ciphertext, constant *big.Int) (product *big.Int, err error) {
@@ -18,7 +18,7 @@ func (pk dj_public_key) MultiplyFactor(ciphertext, constant *big.Int) (product *
     return
 }
 
-func (pk dj_public_key) Multiply(...*big.Int) (*big.Int, error) {
+func (pk dj_public_key) Multiply(a, b *big.Int) (*big.Int, error) {
     panic("Not supported for Damgård-Jurik cryptosystem.")
 }
 

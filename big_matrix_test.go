@@ -63,7 +63,7 @@ func TestValidNewBigMatrixFromInt(t *testing.T) {
             matrixData = append(matrixData, dval)
             testData = append(testData, big.NewInt(int64(dval)))
         }
-        m := NewBigMatrixFromInt(3, 3, matrixData, nil)
+        m := NewBigMatrixFromInt(3, 3, matrixData)
         if m.cols != 3 {
             t.Error("wrong column size")
         }
@@ -77,7 +77,7 @@ func TestValidNewBigMatrixFromInt(t *testing.T) {
         }
     })
     t.Run("uninitialized data", func(t *testing.T) {
-        m := NewBigMatrixFromInt(3, 3, nil, nil)
+        m := NewBigMatrixFromInt(3, 3, nil)
         zero := big.NewInt(0)
         for i := 0; i < 9; i++ {
             if zero.Cmp(m.values[i]) != 0 {
@@ -134,8 +134,8 @@ func TestAt(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
-    a := NewBigMatrixFromInt(2, 2, []int{1,2,3,4}, nil)
-    b := NewBigMatrixFromInt(2, 2, []int{1,2,5,4}, nil)
+    a := NewBigMatrixFromInt(2, 2, []int{1,2,3,4})
+    b := NewBigMatrixFromInt(2, 2, []int{1,2,5,4})
     a.Set(1,0,big.NewInt(5))
     Compare(a, b, t)
     defer func() {
@@ -147,12 +147,12 @@ func TestSet(t *testing.T) {
 }
 
 func TestMultiplication(t *testing.T) {
-    a := NewBigMatrixFromInt(2, 2, []int{1,2,3,4}, nil)
-    b := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6}, nil)
+    a := NewBigMatrixFromInt(2, 2, []int{1,2,3,4})
+    b := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
     t.Run("vanilla", func(t *testing.T) {
         c, err := a.Multiply(b)
         if err != nil {t.Error(err)}
-        d := NewBigMatrixFromInt(2, 3, []int{9,12,15,19,26,33}, nil)
+        d := NewBigMatrixFromInt(2, 3, []int{9,12,15,19,26,33})
         Compare(c, d, t)
     })
     t.Run("dimension mismatch", func(t *testing.T) {
@@ -166,10 +166,10 @@ func TestMultiplication(t *testing.T) {
 }
 
 func TestAddition(t *testing.T) {
-    a := NewBigMatrixFromInt(2, 2, []int{1,2,3,4}, nil)
+    a := NewBigMatrixFromInt(2, 2, []int{1,2,3,4})
     doubleA, err := a.Add(a)
     if err != nil {t.Error(err)}
-    correct := NewBigMatrixFromInt(2, 2, []int{2,4,6,8}, nil)
+    correct := NewBigMatrixFromInt(2, 2, []int{2,4,6,8})
 
     t.Run("vanilla addition", func(t *testing.T) {
         Compare(doubleA, correct, t)
@@ -195,11 +195,11 @@ func TestAddition(t *testing.T) {
 }
 
 func TestSubtraction(t *testing.T) {
-    a := NewBigMatrixFromInt(2, 2, []int{5,3,7,9}, nil)
-    b := NewBigMatrixFromInt(2, 2, []int{1,2,3,4}, nil)
+    a := NewBigMatrixFromInt(2, 2, []int{5,3,7,9})
+    b := NewBigMatrixFromInt(2, 2, []int{1,2,3,4})
     c, err := a.Subtract(b)
     if err != nil {t.Error(err)}
-    correct := NewBigMatrixFromInt(2, 2, []int{4,1,4,5}, nil)
+    correct := NewBigMatrixFromInt(2, 2, []int{4,1,4,5})
     t.Run("vanilla subtraction", func(t *testing.T) {
         Compare(c, correct, t)
     })
@@ -225,19 +225,19 @@ func TestSubtraction(t *testing.T) {
 }
 
 func TestFactorMultiplication(t *testing.T) {
-    a := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5}, nil)
+    a := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
     b := big.NewInt(2)
-    c := NewBigMatrixFromInt(2, 3, []int{6, 8, 4, 2, 16, 10}, nil)
+    c := NewBigMatrixFromInt(2, 3, []int{6, 8, 4, 2, 16, 10})
     d, err := a.MultiplyFactor(b)
     if err != nil {t.Error(err)}
     Compare(c, d, t)
 }
 
 func TestConcatenation(t *testing.T) {
-    a := NewBigMatrixFromInt(3, 2, []int{1, 2, 3, 4, 5, 6}, nil)
+    a := NewBigMatrixFromInt(3, 2, []int{1, 2, 3, 4, 5, 6})
     t.Run("valid concatenation", func(t *testing.T) {
-        b := NewBigMatrixFromInt(3, 2, []int{1, 2, 3, 4, 5, 6}, nil)
-        correct := NewBigMatrixFromInt(3, 4, []int{1, 2, 1, 2, 3, 4, 3, 4, 5, 6, 5, 6}, nil)
+        b := NewBigMatrixFromInt(3, 2, []int{1, 2, 3, 4, 5, 6})
+        correct := NewBigMatrixFromInt(3, 4, []int{1, 2, 1, 2, 3, 4, 3, 4, 5, 6, 5, 6})
         ab := a.Concatenate(b)
         Compare(correct, ab, t)
     })
@@ -253,15 +253,15 @@ func TestConcatenation(t *testing.T) {
 }
 
 func TestCrop(t *testing.T) {
-    a := NewBigMatrixFromInt(3, 3, []int{1, 2, 3, 4, 5, 6, 7, 8, 9}, nil)
+    a := NewBigMatrixFromInt(3, 3, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
     a = a.CropHorizontally(2)   
-    correct := NewBigMatrixFromInt(3, 2, []int{2, 3, 5, 6, 8, 9}, nil)
+    correct := NewBigMatrixFromInt(3, 2, []int{2, 3, 5, 6, 8, 9})
     Compare(a, correct, t)
 }
 
 func TestMod(t *testing.T) {
-    a := NewBigMatrixFromInt(3, 2, []int{9,4,6,3,8,6}, nil)
-    b := NewBigMatrixFromInt(3, 2, []int{0,1,0,0,2,0}, nil)
+    a := NewBigMatrixFromInt(3, 2, []int{9,4,6,3,8,6})
+    b := NewBigMatrixFromInt(3, 2, []int{0,1,0,0,2,0})
     a = a.Mod(big.NewInt(3))
     for i := 0; i < 3; i += 1 {
         for j := 0; j < 2; j += 1 {

@@ -35,16 +35,16 @@ func NewBigMatrix(rows, cols int, data []*big.Int, cs cryptosystem) BigMatrix {
 }
 
 // create a new BigMatrix from int values
-func NewBigMatrixFromInt(rows, cols int, data []int, cs cryptosystem) BigMatrix {
+func NewBigMatrixFromInt(rows, cols int, data []int) BigMatrix {
     if data == nil {
-        return NewBigMatrix(rows, cols, nil, cs)
+        return NewBigMatrix(rows, cols, nil, nil)
     }
     l := len(data)
     s := make([]*big.Int, l)
     for i := 0; i < l; i += 1 {
         s[i] = big.NewInt(int64(data[i]))
     }
-    return NewBigMatrix(rows, cols, s, cs)
+    return NewBigMatrix(rows, cols, s, nil)
 }
 
 // get value at (row, col), where first row/col is 0.

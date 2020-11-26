@@ -33,9 +33,9 @@ func DecryptMatrix(cipher BigMatrix, pk *tcpaillier.PubKey, sks []*tcpaillier.Ke
 
 func TestEncryptedMatrixAddition(t *testing.T) {
     cs, djsks, _ := NewDJCryptosystem()
-    a := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5}, nil)
-    b := NewBigMatrixFromInt(2, 3, []int{1, 2, 3, 4, 5, 6}, nil)
-    c := NewBigMatrixFromInt(2, 3, []int{4, 6, 5, 5, 13, 11}, nil)
+    a := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
+    b := NewBigMatrixFromInt(2, 3, []int{1, 2, 3, 4, 5, 6})
+    c := NewBigMatrixFromInt(2, 3, []int{4, 6, 5, 5, 13, 11})
     a = EncryptMatrix(a, cs.PubKey)
     b = EncryptMatrix(b, cs.PubKey)
     sum, err := a.Add(b)
@@ -46,9 +46,9 @@ func TestEncryptedMatrixAddition(t *testing.T) {
 
 func TestEncryptedMatrixSubtraction(t *testing.T) {
     cs, djsks, _ := NewDJCryptosystem()
-    a := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5}, nil)
-    b := NewBigMatrixFromInt(2, 3, []int{1, 2, 2, 0, 4, 3}, nil)
-    c := NewBigMatrixFromInt(2, 3, []int{2, 2, 0, 1, 4, 2}, nil)
+    a := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
+    b := NewBigMatrixFromInt(2, 3, []int{1, 2, 2, 0, 4, 3})
+    c := NewBigMatrixFromInt(2, 3, []int{2, 2, 0, 1, 4, 2})
     a = EncryptMatrix(a, cs.PubKey)
     b = EncryptMatrix(b, cs.PubKey)
     diff, err := a.Subtract(b)
@@ -58,8 +58,8 @@ func TestEncryptedMatrixSubtraction(t *testing.T) {
 }
 
 func TestEncryptedMatrixMultiplication(t *testing.T) {
-    a := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6}, nil)
-    b := NewBigMatrixFromInt(3, 2, []int{1,2,3,4,5,6}, nil)
+    a := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
+    b := NewBigMatrixFromInt(3, 2, []int{1,2,3,4,5,6})
     cs, djsks, _ := NewDJCryptosystem()
     ae := EncryptMatrix(a, cs.PubKey)
     t.Run("plaintext from right", func(t *testing.T) {  
@@ -81,8 +81,8 @@ func TestEncryptedMatrixMultiplication(t *testing.T) {
 }
 
 func TestMultiplyPlaintextFactor(t *testing.T) {
-    a := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6}, nil)
-    correct := NewBigMatrixFromInt(2, 3, []int{3,6,9,12,15,18}, nil)
+    a := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
+    correct := NewBigMatrixFromInt(2, 3, []int{3,6,9,12,15,18})
     c := big.NewInt(3)
     cs, djsks, _ := NewDJCryptosystem()
     a = EncryptMatrix(a, cs.PubKey)
