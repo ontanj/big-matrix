@@ -7,28 +7,28 @@ import (
 )
 
 func EncryptMatrix(a BigMatrix, pk *tcpaillier.PubKey) (b BigMatrix) {
-    b_vals := make([]*big.Int, len(a.values))
+    b_vals := make([]interface{}, len(a.values))
     var err error
     for i := range a.values {
-        b_vals[i], _, err = pk.Encrypt(a.values[i])
+        b_vals[i], _, err = pk.Encrypt(a.values[i].(*big.Int))
         if err != nil {panic(err)}
     }
     return NewBigMatrix(a.rows, a.cols, b_vals, dj_public_key{pk})
 }
 
 func DecryptMatrix(cipher BigMatrix, pk *tcpaillier.PubKey, sks []*tcpaillier.KeyShare) (plain BigMatrix) {
-    plain_vals := make([]*big.Int, len(cipher.values))
+    plain_vals := make([]interface{}, len(cipher.values))
     var err error
     for i, enc_val := range cipher.values {
         part_dec := make([]*tcpaillier.DecryptionShare, len(sks))
         for j, sk := range sks {
-            part_dec[j], err = sk.PartialDecrypt(enc_val)
+            part_dec[j], err = sk.PartialDecrypt(enc_val.(*big.Int))
             if err != nil {panic(err)}
         }
         plain_vals[i], err = pk.CombineShares(part_dec...)
         if err != nil {panic(err)}
     }
-    return NewBigMatrix(cipher.rows, cipher.cols, plain_vals, nil)
+    return NewBigMatrix(cipher.rows, cipher.cols, plain_vals, bigint{})
 }
 
 func TestEncryptedMatrixAddition(t *testing.T) {

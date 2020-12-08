@@ -1,25 +1,35 @@
 package bigmatrix
 
 import (
-	"math/big"
-	"github.com/niclabs/tcpaillier"
+    "math/big"
+    "github.com/niclabs/tcpaillier"
 )
 
 type dj_public_key struct {
     *tcpaillier.PubKey
 }
 
-func (pk dj_public_key) Add(a, b *big.Int) (sum *big.Int, err error) {
-    return pk.PubKey.Add(a, b)
+func (pk dj_public_key) Add(a, b interface{}) (sum interface{}, err error) {
+    return pk.PubKey.Add(a.(*big.Int), b.(*big.Int))
 }
 
-func (pk dj_public_key) MultiplyFactor(ciphertext, constant *big.Int) (product *big.Int, err error) {
-    product, _, err = pk.PubKey.Multiply(ciphertext, constant)
+func (pk dj_public_key) Subtract(a, b interface{}) (diff interface{}, err error) {
+    neg, _, err := pk.PubKey.Multiply(b.(*big.Int), new(big.Int).SetInt64(-1))
+    if err != nil {return nil, err}
+    return pk.PubKey.Add(a.(*big.Int), neg)
+}
+
+func (pk dj_public_key) MultiplyScalar(ciphertext, constant interface{}) (product interface{}, err error) {
+    product, _, err = pk.PubKey.Multiply(ciphertext.(*big.Int), constant.(*big.Int))
     return
 }
 
-func (pk dj_public_key) Multiply(a, b *big.Int) (*big.Int, error) {
+func (pk dj_public_key) Multiply(a, b interface{}) (interface{}, error) {
     panic("Not supported for Damgård-Jurik cryptosystem.")
+}
+
+func (pk dj_public_key) IsPlaintext() bool {
+    return false
 }
 
 func NewDJCryptosystem() (public_key dj_public_key, secret_keys []*tcpaillier.KeyShare, err error) {

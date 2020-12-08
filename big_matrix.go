@@ -1,54 +1,35 @@
 package bigmatrix
 
 import (
-    "math/big"
     "fmt"
-    "reflect"
 )
 
 type BigMatrix struct {
-    values []*big.Int
+    values []interface{}
     rows, cols int
-    cryptosystem cryptosystem
+    space space
 }
 
 // create a new BigMatrix with the given size and data, possible encrypted by cryptosystem cs (or nil)
-func NewBigMatrix(rows, cols int, data []*big.Int, cs cryptosystem) BigMatrix {
+func NewBigMatrix(rows, cols int, data []interface{}, space space) BigMatrix {
     if data == nil {
-        data = make([]*big.Int, rows*cols)
-        for i := range data {
-            data[i] = big.NewInt(0)
-        }
+        data = make([]interface{}, rows*cols)
     } else if rows * cols != len(data) {
         panic("Data structure not matching matrix size")
+    }
+    if space == nil {
+        panic("Space can't be nil")
     }
     var m BigMatrix
     m.values = data
     m.rows = rows
     m.cols = cols
-    if cs == nil {
-        m.cryptosystem = plain{}
-    } else {
-        m.cryptosystem = cs
-    }
+    m.space = space
     return m
 }
 
-// create a new BigMatrix from int values
-func NewBigMatrixFromInt(rows, cols int, data []int) BigMatrix {
-    if data == nil {
-        return NewBigMatrix(rows, cols, nil, nil)
-    }
-    l := len(data)
-    s := make([]*big.Int, l)
-    for i := 0; i < l; i += 1 {
-        s[i] = big.NewInt(int64(data[i]))
-    }
-    return NewBigMatrix(rows, cols, s, nil)
-}
-
 // get value at (row, col), where first row/col is 0.
-func (m BigMatrix) At(row, col int) *big.Int {
+func (m BigMatrix) At(row, col int) interface{} {
     if row >= m.rows || col >= m.cols || row < 0 || col < 0{
         panic(fmt.Sprintf("Index out of bounds: (%d, %d)", row, col))
     }
@@ -57,7 +38,7 @@ func (m BigMatrix) At(row, col int) *big.Int {
 }
 
 // set value at (row, col), where first row/col is 0.
-func (m BigMatrix) Set(row, col int, value *big.Int) {
+func (m BigMatrix) Set(row, col int, value interface{}) {
     if row >= m.rows || col >= m.cols || row < 0 || col < 0 {
         panic(fmt.Sprintf("Index out of bounds: (%d, %d)", row, col))
     }
@@ -72,34 +53,37 @@ func (a BigMatrix) Multiply(b BigMatrix) (BigMatrix, error) {
         panic("matrices a and b are not compatible")
     }
     cRows, cCols := a.rows, b.cols
-    values := make([]*big.Int, cRows*cCols)
-    var r *big.Int
+    values := make([]interface{}, cRows*cCols)
+    var r interface{}
     var err error
+    var space space
     for i := 0; i < cRows; i += 1 {
         for j := 0; j < cCols; j += 1 {
-            var sum *big.Int
+            var sum interface{}
             for k := 0; k < a.cols; k += 1 {
-                if reflect.TypeOf(a.cryptosystem) == reflect.TypeOf(plain{}) {
-                    r, err = b.cryptosystem.MultiplyFactor(b.At(k, j), a.At(i, k))
+                if a.space.IsPlaintext() {
+                    space = b.space
+                    r, err = b.space.MultiplyScalar(b.At(k, j), a.At(i, k))
                     if err != nil {return a, err}
                     if sum == nil {
                         sum = r
                     } else {
-                        sum, err = b.cryptosystem.Add(r, sum)
+                        sum, err = b.space.Add(r, sum)
                         if err != nil {return a, err}
                     }
                 } else {
-                    if reflect.TypeOf(b.cryptosystem) == reflect.TypeOf(plain{}) {
-                        r, err = a.cryptosystem.MultiplyFactor(a.At(i, k), b.At(k, j))
+                    space = a.space
+                    if b.space.IsPlaintext() {
+                        r, err = a.space.MultiplyScalar(a.At(i, k), b.At(k, j))
                         if err != nil {return a, err}
                     } else {
-                        r, err = a.cryptosystem.Multiply(a.At(i, k), b.At(k, j))
+                        r, err = a.space.Multiply(a.At(i, k), b.At(k, j))
                         if err != nil {return a, err}
                     }
                     if sum == nil {
                         sum = r
                     } else {
-                        sum, err = a.cryptosystem.Add(r, sum)
+                        sum, err = a.space.Add(r, sum)
                         if err != nil {return a, err}
                     }
                 }
@@ -108,30 +92,30 @@ func (a BigMatrix) Multiply(b BigMatrix) (BigMatrix, error) {
             sum = nil
         }
     }
-    return NewBigMatrix(cRows, cCols, values, a.cryptosystem), nil
+    return NewBigMatrix(cRows, cCols, values, space), nil
 }
 
 // multiplication of a by a factor
 // assumes matrix and factor is in same space, otherwise use MultiplyPlaintextFactor
-func (a BigMatrix) MultiplyFactor(factor *big.Int) (BigMatrix, error) {
-    two_val_mul := func (t1, t2 *big.Int) (*big.Int, error) {return a.cryptosystem.Multiply(t1, t2)}
+func (a BigMatrix) MultiplyFactor(factor interface{}) (BigMatrix, error) {
+    two_val_mul := func (t1, t2 interface{}) (interface{}, error) {return a.space.Multiply(t1, t2)}
     return scalarMultiplication(two_val_mul, a, factor)
 }
 
 // multiplication of a by a factor
 // to be used if a is encrypted while factor is not
-func (a BigMatrix) MultiplyPlaintextFactor(factor *big.Int) (BigMatrix, error) {
-    return scalarMultiplication(a.cryptosystem.MultiplyFactor, a, factor)
+func (a BigMatrix) MultiplyPlaintextFactor(factor interface{}) (BigMatrix, error) {
+    return scalarMultiplication(a.space.MultiplyScalar, a, factor)
 }
 
-func scalarMultiplication(mulfunc func(*big.Int, *big.Int) (*big.Int, error), a BigMatrix, b *big.Int) (BigMatrix, error) {
-    c_vals := make([]*big.Int, len(a.values))
+func scalarMultiplication(mulfunc func(interface{}, interface{}) (interface{}, error), a BigMatrix, b interface{}) (BigMatrix, error) {
+    c_vals := make([]interface{}, len(a.values))
     var err error
     for i := range c_vals {
         c_vals[i], err = mulfunc(a.values[i], b)
         if err != nil {return a, err}
     }
-    c := NewBigMatrix(a.rows, a.cols, c_vals, nil)
+    c := NewBigMatrix(a.rows, a.cols, c_vals, a.space)
     return c, nil
 }
 
@@ -142,13 +126,13 @@ func (a BigMatrix) Add(b BigMatrix) (BigMatrix, error) {
     } else if a.cols != b.cols {
         panic("column mismatch in addition")
     }
-    c_vals := make([]*big.Int, len(a.values))
+    c_vals := make([]interface{}, len(a.values))
     var err error
     for i := range c_vals {
-        c_vals[i], err = a.cryptosystem.Add(a.values[i], b.values[i])
+        c_vals[i], err = a.space.Add(a.values[i], b.values[i])
         if err != nil {return a, err}
     }
-    c := NewBigMatrix(a.rows, a.cols, c_vals, a.cryptosystem)
+    c := NewBigMatrix(a.rows, a.cols, c_vals, a.space)
     return c, nil
 }
 
@@ -159,15 +143,16 @@ func (a BigMatrix) Subtract(b BigMatrix) (BigMatrix, error) {
     } else if a.cols != b.cols {
         panic("column mismatch in subtraction")
     }
-    c_vals := make([]*big.Int, len(a.values))
-    neg := big.NewInt(-1)
+    c_vals := make([]interface{}, len(a.values))
+    var err error
+    // neg := big.NewInt(-1)
     for i := range c_vals {
-        b_neg, err := a.cryptosystem.MultiplyFactor(b.values[i], neg)
-        if err != nil {return a, err}
-        c_vals[i], err = a.cryptosystem.Add(a.values[i], b_neg)
+        // b_neg, err := a.cryptosystem.MultiplyFactor(b.values[i], neg)
+        // if err != nil {return a, err}
+        c_vals[i], err = a.space.Subtract(a.values[i], b.values[i])
         if err != nil {return a, err}
     }
-    c := NewBigMatrix(a.rows, a.cols, c_vals, a.cryptosystem)
+    c := NewBigMatrix(a.rows, a.cols, c_vals, a.space)
     return c, nil
 }
 
@@ -176,29 +161,30 @@ func (a BigMatrix) Concatenate(b BigMatrix) BigMatrix {
     if a.rows != b.rows {
         panic("matrices not compatible for concatenation")
     }
-    vals := make([]*big.Int, 0, (a.cols + b.cols) * a.rows)
+    vals := make([]interface{}, 0, (a.cols + b.cols) * a.rows)
     for i := 0; i < a.rows; i += 1 {
         vals = append(vals, a.values[i*a.cols:(i+1)*a.cols]...)
         vals = append(vals, b.values[i*b.cols:(i+1)*b.cols]...)
     }
-    return NewBigMatrix(a.rows, a.cols + b.cols, vals, a.cryptosystem)
+    return NewBigMatrix(a.rows, a.cols + b.cols, vals, a.space)
 }
 
 // create a new matrix from last k columns of a
 func (a BigMatrix) CropHorizontally(k int) BigMatrix {
-    vals := make([]*big.Int, 0, k*a.rows)
+    vals := make([]interface{}, 0, k*a.rows)
     d := a.cols - k
     for i := 0; i < a.rows; i += 1 {
         vals = append(vals, a.values[i*a.cols+d:(i+1)*a.cols]...)
     }
-    return NewBigMatrix(a.rows, k, vals, a.cryptosystem)
+    return NewBigMatrix(a.rows, k, vals, a.space)
 }
 
-// apply Mod for all matrix elements
-func (a BigMatrix) Mod(mod *big.Int) BigMatrix {
-    b_vals := make([]*big.Int, len(a.values))
-    for i := range a.values {
-        b_vals[i] = new(big.Int).Mod(a.values[i], mod)
+// apply function f to all matrix elements
+func (a BigMatrix) Apply(f func(interface{}) (interface{}, error)) (b BigMatrix, err error) {
+    b_vals := make([]interface{}, len(a.values))
+    for i, v := range a.values {
+        b_vals[i], err = f(v)
+        if err != nil {return}
     }
-    return NewBigMatrix(a.rows, a.cols, b_vals, a.cryptosystem)
+    return NewBigMatrix(a.rows, a.cols, b_vals, a.space), nil
 }

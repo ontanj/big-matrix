@@ -7,14 +7,14 @@ import (
 
 func Compare(a, b BigMatrix, t *testing.T) {
     if a.cols != b.cols {
-        t.Errorf("differing numer of columns (%d and %d)", a.cols, b.cols)
+        t.Errorf("differing number of columns (%d and %d)", a.cols, b.cols)
     }
     if a.rows != b.rows {
-        t.Errorf("differing numer of columns (%d and %d)", a.rows, b.rows)
+        t.Errorf("differing number of columns (%d and %d)", a.rows, b.rows)
     }
     for i := 0; i < a.rows; i += 1 {
         for j := 0; j < a.cols; j += 1 {
-            if a.At(i, j).Cmp(b.At(i, j)) != 0 {
+            if a.At(i, j).(*big.Int).Cmp(b.At(i, j).(*big.Int)) != 0 {
                 t.Errorf("values differ at (%d, %d)", i, j)
             }
         }
@@ -23,7 +23,7 @@ func Compare(a, b BigMatrix, t *testing.T) {
 
 func TestValidNewBigMatrix(t *testing.T) {
     t.Run("vanilla", func(t *testing.T){
-        var matrixData []*big.Int
+        var matrixData []interface{}
         var testData []*big.Int
         var dval int
         for dval = 1; dval <= 9; dval++ {
@@ -38,17 +38,16 @@ func TestValidNewBigMatrix(t *testing.T) {
             t.Error("wrong row size")
         }
         for i := 0; i < 9; i++ {
-            if m.values[i].Cmp(testData[i]) != 0 {
+            if m.values[i].(*big.Int).Cmp(testData[i]) != 0 {
                 t.Error("wrong data")
             }
         }
     })
     t.Run("uninitialized data", func(t *testing.T) {
         m := NewBigMatrix(3, 3, nil, nil)
-        zero := big.NewInt(0)
         for i := 0; i < 9; i++ {
-            if zero.Cmp(m.values[i]) != 0 {
-                t.Error("not zeroes for uninitialized data")
+            if m.values[i] != nil {
+                t.Error("not initialized")
             }
         }
     })
@@ -71,17 +70,16 @@ func TestValidNewBigMatrixFromInt(t *testing.T) {
             t.Error("wrong row size")
         }
         for i := 0; i < 9; i++ {
-            if m.values[i].Cmp(testData[i]) != 0 {
+            if m.values[i].(*big.Int).Cmp(testData[i]) != 0 {
                 t.Error("wrong data")
             }
         }
     })
     t.Run("uninitialized data", func(t *testing.T) {
         m := NewBigMatrixFromInt(3, 3, nil)
-        zero := big.NewInt(0)
         for i := 0; i < 9; i++ {
-            if zero.Cmp(m.values[i]) != 0 {
-                t.Error("not zeroes for uninitialized data")
+            if m.values[i] != nil {
+                t.Error("not initialized")
             }
         }
     })
@@ -93,7 +91,7 @@ func TestInvalidNewBigMatrix(t *testing.T) {
             t.Error("contructor did not panic on mismatched size")
         }
     }()
-    var matrixData []*big.Int
+    var matrixData []interface{}
     var dval int64
     for dval = 1; dval <= 8; dval++ {
         matrixData = append(matrixData, big.NewInt(dval))
@@ -102,7 +100,7 @@ func TestInvalidNewBigMatrix(t *testing.T) {
 }
 
 func TestAt(t *testing.T) {
-    var matrixData []*big.Int
+    var matrixData []interface{}
     var testData []*big.Int
     var dval int64
     for dval = 1; dval <= 9; dval++ {
@@ -112,7 +110,7 @@ func TestAt(t *testing.T) {
     m := NewBigMatrix(3, 3, matrixData, nil)
     row, col := 0, 0
     for _, val := range testData {
-        if val.Cmp(m.At(row, col)) != 0 {
+        if val.Cmp(m.At(row, col).(*big.Int)) != 0 {
             t.Error("malformed matrix")
         }
         if col == 2 {
@@ -262,10 +260,11 @@ func TestCrop(t *testing.T) {
 func TestMod(t *testing.T) {
     a := NewBigMatrixFromInt(3, 2, []int{9,4,6,3,8,6})
     b := NewBigMatrixFromInt(3, 2, []int{0,1,0,0,2,0})
-    a = a.Mod(big.NewInt(3))
+    a, err := a.Apply(func(val interface{}) (interface{}, error) {return new(big.Int).Mod(val.(*big.Int), big.NewInt(3)), nil})
+    if err != nil {t.Error(err)}
     for i := 0; i < 3; i += 1 {
         for j := 0; j < 2; j += 1 {
-            if a.At(i,j).Cmp(b.At(i,j)) != 0 {
+            if a.At(i,j).(*big.Int).Cmp(b.At(i,j).(*big.Int)) != 0 {
                 t.Errorf("(%d,%d): expected %d, got %d", i, j, a.At(i,j), b.At(i,j))
             }
         }
