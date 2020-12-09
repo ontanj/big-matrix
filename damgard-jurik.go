@@ -3,6 +3,7 @@ package bigmatrix
 import (
     "math/big"
     "github.com/niclabs/tcpaillier"
+    "errors"
 )
 
 type dj_public_key struct {
@@ -25,7 +26,7 @@ func (pk dj_public_key) MultiplyScalar(ciphertext, constant interface{}) (produc
 }
 
 func (pk dj_public_key) Multiply(a, b interface{}) (interface{}, error) {
-    panic("Not supported for Damgård-Jurik cryptosystem.")
+    return nil, errors.New("multiplication not supported")
 }
 
 func (pk dj_public_key) IsPlaintext() bool {

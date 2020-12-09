@@ -27,9 +27,9 @@ func (p bigint) IsPlaintext() bool {
 }
 
 // create a new BigMatrix from int values
-func NewBigMatrixFromInt(rows, cols int, data []int) BigMatrix {
+func NewBigMatrixFromInt(rows, cols int, data []int) (BigMatrix, error) {
     if data == nil {
-        return NewBigMatrix(rows, cols, nil, nil)
+        return NewBigMatrix(rows, cols, nil, bigint{})
     }
     l := len(data)
     s := make([]interface{}, l)
