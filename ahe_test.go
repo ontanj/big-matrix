@@ -1,4 +1,4 @@
-package bigmatrix
+package genmatrix
 
 import (
     "math/big"
@@ -6,16 +6,16 @@ import (
     "github.com/niclabs/tcpaillier"
 )
 
-func EncryptMatrix(a BigMatrix, pk *tcpaillier.PubKey) (b BigMatrix, err error) {
+func EncryptMatrix(a Matrix, pk *tcpaillier.PubKey) (b Matrix, err error) {
     b_vals := make([]interface{}, len(a.values))
     for i := range a.values {
         b_vals[i], _, err = pk.Encrypt(a.values[i].(*big.Int))
         if err != nil {return}
     }
-    return NewBigMatrix(a.rows, a.cols, b_vals, dj_public_key{pk})
+    return NewMatrix(a.rows, a.cols, b_vals, dj_public_key{pk})
 }
 
-func DecryptMatrix(cipher BigMatrix, pk *tcpaillier.PubKey, sks []*tcpaillier.KeyShare) (plain BigMatrix, err error) {
+func DecryptMatrix(cipher Matrix, pk *tcpaillier.PubKey, sks []*tcpaillier.KeyShare) (plain Matrix, err error) {
     plain_vals := make([]interface{}, len(cipher.values))
     for i, enc_val := range cipher.values {
         part_dec := make([]*tcpaillier.DecryptionShare, len(sks))
@@ -26,17 +26,17 @@ func DecryptMatrix(cipher BigMatrix, pk *tcpaillier.PubKey, sks []*tcpaillier.Ke
         plain_vals[i], err = pk.CombineShares(part_dec...)
         if err != nil {return}
     }
-    return NewBigMatrix(cipher.rows, cipher.cols, plain_vals, bigint{})
+    return NewMatrix(cipher.rows, cipher.cols, plain_vals, bigint{})
 }
 
 func TestEncryptedMatrixAddition(t *testing.T) {
     cs, djsks, err := NewDJCryptosystem()
     if err != nil {t.Error(err)}
-    a, err := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
+    a, err := NewMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
     if err != nil {t.Error(err)}
-    b, err := NewBigMatrixFromInt(2, 3, []int{1, 2, 3, 4, 5, 6})
+    b, err := NewMatrixFromInt(2, 3, []int{1, 2, 3, 4, 5, 6})
     if err != nil {t.Error(err)}
-    c, err := NewBigMatrixFromInt(2, 3, []int{4, 6, 5, 5, 13, 11})
+    c, err := NewMatrixFromInt(2, 3, []int{4, 6, 5, 5, 13, 11})
     if err != nil {t.Error(err)}
     a, err = EncryptMatrix(a, cs.PubKey)
     if err != nil {t.Error(err)}
@@ -52,11 +52,11 @@ func TestEncryptedMatrixAddition(t *testing.T) {
 func TestEncryptedMatrixSubtraction(t *testing.T) {
     cs, djsks, err := NewDJCryptosystem()
     if err != nil {t.Error(err)}
-    a, err := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
+    a, err := NewMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
     if err != nil {t.Error(err)}
-    b, err := NewBigMatrixFromInt(2, 3, []int{1, 2, 2, 0, 4, 3})
+    b, err := NewMatrixFromInt(2, 3, []int{1, 2, 2, 0, 4, 3})
     if err != nil {t.Error(err)}
-    c, err := NewBigMatrixFromInt(2, 3, []int{2, 2, 0, 1, 4, 2})
+    c, err := NewMatrixFromInt(2, 3, []int{2, 2, 0, 1, 4, 2})
     if err != nil {t.Error(err)}
     a, err = EncryptMatrix(a, cs.PubKey)
     if err != nil {t.Error(err)}
@@ -70,9 +70,9 @@ func TestEncryptedMatrixSubtraction(t *testing.T) {
 }
 
 func TestEncryptedMatrixMultiplication(t *testing.T) {
-    a, err := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
+    a, err := NewMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
     if err != nil {t.Error(err)}
-    b, err := NewBigMatrixFromInt(3, 2, []int{1,2,3,4,5,6})
+    b, err := NewMatrixFromInt(3, 2, []int{1,2,3,4,5,6})
     if err != nil {t.Error(err)}
     cs, djsks, err := NewDJCryptosystem()
     if err != nil {t.Error(err)}
@@ -99,8 +99,8 @@ func TestEncryptedMatrixMultiplication(t *testing.T) {
 }
 
 func TestMultiplyPlaintextFactor(t *testing.T) {
-    a, err := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
-    correct, err := NewBigMatrixFromInt(2, 3, []int{3,6,9,12,15,18})
+    a, err := NewMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
+    correct, err := NewMatrixFromInt(2, 3, []int{3,6,9,12,15,18})
     c := big.NewInt(3)
     cs, djsks, err := NewDJCryptosystem()
     if err != nil {t.Error(err)}

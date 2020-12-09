@@ -1,4 +1,4 @@
-package bigmatrix
+package genmatrix
 
 import (
     "math/big"
@@ -26,15 +26,15 @@ func (p bigint) Scalarspace() bool {
     return true
 }
 
-// create a new BigMatrix from int values
-func NewBigMatrixFromInt(rows, cols int, data []int) (BigMatrix, error) {
+// create a new Matrix from int values
+func NewMatrixFromInt(rows, cols int, data []int) (Matrix, error) {
     if data == nil {
-        return NewBigMatrix(rows, cols, nil, bigint{})
+        return NewMatrix(rows, cols, nil, bigint{})
     }
     l := len(data)
     s := make([]interface{}, l)
     for i := 0; i < l; i += 1 {
         s[i] = big.NewInt(int64(data[i]))
     }
-    return NewBigMatrix(rows, cols, s, bigint{})
+    return NewMatrix(rows, cols, s, bigint{})
 }

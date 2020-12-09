@@ -1,4 +1,4 @@
-package bigmatrix
+package genmatrix
 
 type space interface {
 

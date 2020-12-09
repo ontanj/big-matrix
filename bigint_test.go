@@ -1,4 +1,4 @@
-package bigmatrix
+package genmatrix
 
 import (
     "testing"
@@ -9,7 +9,7 @@ func decode(val interface{}, err error) (*big.Int, error) {
     return val.(*big.Int), err
 }
 
-func Compare(a, b BigMatrix, t *testing.T) {
+func Compare(a, b Matrix, t *testing.T) {
     if a.cols != b.cols {
         t.Errorf("differing number of columns (%d and %d)", a.cols, b.cols)
     }
@@ -27,7 +27,7 @@ func Compare(a, b BigMatrix, t *testing.T) {
     }
 }
 
-func TestValidNewBigMatrix(t *testing.T) {
+func TestValidNewMatrix(t *testing.T) {
     t.Run("vanilla", func(t *testing.T){
         var matrixData []interface{}
         var testData []*big.Int
@@ -36,7 +36,7 @@ func TestValidNewBigMatrix(t *testing.T) {
             matrixData = append(matrixData, big.NewInt(int64(dval)))
             testData = append(testData, big.NewInt(int64(dval)))
         }
-        m, err := NewBigMatrix(3, 3, matrixData, bigint{})
+        m, err := NewMatrix(3, 3, matrixData, bigint{})
         if err != nil {t.Error(err)}
         if m.cols != 3 {
             t.Error("wrong column size")
@@ -56,7 +56,7 @@ func TestValidNewBigMatrix(t *testing.T) {
         }
     })
     t.Run("uninitialized data", func(t *testing.T) {
-        m, err := NewBigMatrix(3, 3, nil, bigint{})
+        m, err := NewMatrix(3, 3, nil, bigint{})
         if err != nil {t.Error(err)}
         for i := 0; i < 9; i++ {
             if m.values[i] != nil {
@@ -66,7 +66,7 @@ func TestValidNewBigMatrix(t *testing.T) {
     })
 }
 
-func TestValidNewBigMatrixFromInt(t *testing.T) {
+func TestValidNewMatrixFromInt(t *testing.T) {
     t.Run("vanilla", func(t *testing.T){
         var matrixData []int
         var testData []*big.Int
@@ -75,7 +75,7 @@ func TestValidNewBigMatrixFromInt(t *testing.T) {
             matrixData = append(matrixData, dval)
             testData = append(testData, big.NewInt(int64(dval)))
         }
-        m, err := NewBigMatrixFromInt(3, 3, matrixData)
+        m, err := NewMatrixFromInt(3, 3, matrixData)
         if err != nil {t.Error(err)}
         if m.cols != 3 {
             t.Error("wrong column size")
@@ -90,7 +90,7 @@ func TestValidNewBigMatrixFromInt(t *testing.T) {
         }
     })
     t.Run("uninitialized data", func(t *testing.T) {
-        m, err := NewBigMatrixFromInt(3, 3, nil)
+        m, err := NewMatrixFromInt(3, 3, nil)
         if err != nil {t.Error(err)}
         for i := 0; i < 9; i++ {
             if m.values[i] != nil {
@@ -100,13 +100,13 @@ func TestValidNewBigMatrixFromInt(t *testing.T) {
     })
 }
 
-func TestInvalidNewBigMatrix(t *testing.T) {
+func TestInvalidNewMatrix(t *testing.T) {
     var matrixData []interface{}
     var dval int64
     for dval = 1; dval <= 8; dval++ {
         matrixData = append(matrixData, big.NewInt(dval))
     }
-    _, err := NewBigMatrix(3, 3, matrixData, bigint{})
+    _, err := NewMatrix(3, 3, matrixData, bigint{})
     if err == nil {t.Error("no error on mismatched size")}
 }
 
@@ -118,7 +118,7 @@ func TestAt(t *testing.T) {
         matrixData = append(matrixData, big.NewInt(dval))
         testData = append(testData, big.NewInt(dval))
     }
-    m, err := NewBigMatrix(3, 3, matrixData, bigint{})
+    m, err := NewMatrix(3, 3, matrixData, bigint{})
     if err != nil {t.Error(err)}
     row, col := 0, 0
     for _, val := range testData {
@@ -143,9 +143,9 @@ func TestAt(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
-    a, err := NewBigMatrixFromInt(2, 2, []int{1,2,3,4})
+    a, err := NewMatrixFromInt(2, 2, []int{1,2,3,4})
     if err != nil {t.Error(err)}
-    b, err := NewBigMatrixFromInt(2, 2, []int{1,2,5,4})
+    b, err := NewMatrixFromInt(2, 2, []int{1,2,5,4})
     if err != nil {t.Error(err)}
     a.Set(1,0,big.NewInt(5))
     Compare(a, b, t)
@@ -154,14 +154,14 @@ func TestSet(t *testing.T) {
 }
 
 func TestMultiplication(t *testing.T) {
-    a, err := NewBigMatrixFromInt(2, 2, []int{1,2,3,4})
+    a, err := NewMatrixFromInt(2, 2, []int{1,2,3,4})
     if err != nil {t.Error(err)}
-    b, err := NewBigMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
+    b, err := NewMatrixFromInt(2, 3, []int{1,2,3,4,5,6})
     if err != nil {t.Error(err)}
     t.Run("vanilla", func(t *testing.T) {
         c, err := a.Multiply(b)
         if err != nil {t.Error(err)}
-        d, err := NewBigMatrixFromInt(2, 3, []int{9,12,15,19,26,33})
+        d, err := NewMatrixFromInt(2, 3, []int{9,12,15,19,26,33})
         if err != nil {t.Error(err)}
         Compare(c, d, t)
     })
@@ -172,24 +172,24 @@ func TestMultiplication(t *testing.T) {
 }
 
 func TestAddition(t *testing.T) {
-    a, err := NewBigMatrixFromInt(2, 2, []int{1,2,3,4})
+    a, err := NewMatrixFromInt(2, 2, []int{1,2,3,4})
     if err != nil {t.Error(err)}
     doubleA, err := a.Add(a)
     if err != nil {t.Error(err)}
-    correct, err := NewBigMatrixFromInt(2, 2, []int{2,4,6,8})
+    correct, err := NewMatrixFromInt(2, 2, []int{2,4,6,8})
     if err != nil {t.Error(err)}
 
     t.Run("vanilla addition", func(t *testing.T) {
         Compare(doubleA, correct, t)
     })
     t.Run("row mismatch", func(t *testing.T) {
-        d, err := NewBigMatrix(3, 2, nil, bigint{})
+        d, err := NewMatrix(3, 2, nil, bigint{})
         if err != nil {t.Error(err)}
         _, err = a.Add(d)
         if err == nil {t.Error("addition of mismatched matrices passed")}
     })
     t.Run("column mismatch", func(t *testing.T) {
-        e, err := NewBigMatrix(2, 3, nil, bigint{})
+        e, err := NewMatrix(2, 3, nil, bigint{})
         if err != nil {t.Error(err)}
         _, err = a.Add(e)
         if err == nil {t.Error("addition of mismatched matrices passed")}
@@ -197,26 +197,26 @@ func TestAddition(t *testing.T) {
 }
 
 func TestSubtraction(t *testing.T) {
-    a, err := NewBigMatrixFromInt(2, 2, []int{5,3,7,9})
+    a, err := NewMatrixFromInt(2, 2, []int{5,3,7,9})
     if err != nil {t.Error(err)}
-    b, err := NewBigMatrixFromInt(2, 2, []int{1,2,3,4})
+    b, err := NewMatrixFromInt(2, 2, []int{1,2,3,4})
     if err != nil {t.Error(err)}
     c, err := a.Subtract(b)
     if err != nil {t.Error(err)}
-    correct, err := NewBigMatrixFromInt(2, 2, []int{4,1,4,5})
+    correct, err := NewMatrixFromInt(2, 2, []int{4,1,4,5})
     if err != nil {t.Error(err)}
     t.Run("vanilla subtraction", func(t *testing.T) {
         Compare(c, correct, t)
     })
 
     t.Run("row mismatch", func(t *testing.T) {
-        e, err := NewBigMatrix(3, 2, nil, bigint{})
+        e, err := NewMatrix(3, 2, nil, bigint{})
         if err != nil {t.Error(err)}
         _, err = a.Subtract(e)
         if err == nil {t.Error("subtraction of mismatched matrices passed")}
     })
     t.Run("column mismatch", func(t *testing.T) {
-        f, err := NewBigMatrix(2, 3, nil, bigint{})	
+        f, err := NewMatrix(2, 3, nil, bigint{})	
         if err != nil {t.Error(err)}
         _, err = a.Subtract(f)
         if err == nil {t.Error("subtraction of mismatched matrices passed")}
@@ -224,10 +224,10 @@ func TestSubtraction(t *testing.T) {
 }
 
 func TestFactorMultiplication(t *testing.T) {
-    a, err := NewBigMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
+    a, err := NewMatrixFromInt(2, 3, []int{3, 4, 2, 1, 8, 5})
     if err != nil {t.Error(err)}
     b := big.NewInt(2)
-    c, err := NewBigMatrixFromInt(2, 3, []int{6, 8, 4, 2, 16, 10})
+    c, err := NewMatrixFromInt(2, 3, []int{6, 8, 4, 2, 16, 10})
     if err != nil {t.Error(err)}
     d, err := a.MultiplyScalar(b)
     if err != nil {t.Error(err)}
@@ -235,19 +235,19 @@ func TestFactorMultiplication(t *testing.T) {
 }
 
 func TestConcatenation(t *testing.T) {
-    a, err := NewBigMatrixFromInt(3, 2, []int{1, 2, 3, 4, 5, 6})
+    a, err := NewMatrixFromInt(3, 2, []int{1, 2, 3, 4, 5, 6})
     if err != nil {t.Error(err)}
     t.Run("valid concatenation", func(t *testing.T) {
-        b, err := NewBigMatrixFromInt(3, 2, []int{1, 2, 3, 4, 5, 6})
+        b, err := NewMatrixFromInt(3, 2, []int{1, 2, 3, 4, 5, 6})
         if err != nil {t.Error(err)}
-        correct, err := NewBigMatrixFromInt(3, 4, []int{1, 2, 1, 2, 3, 4, 3, 4, 5, 6, 5, 6})
+        correct, err := NewMatrixFromInt(3, 4, []int{1, 2, 1, 2, 3, 4, 3, 4, 5, 6, 5, 6})
         if err != nil {t.Error(err)}
         ab, err := a.Concatenate(b)
         if err != nil {t.Error(err)}
         Compare(correct, ab, t)
     })
     t.Run("invalid concatenation", func(t *testing.T) {
-        b, err := NewBigMatrix(4, 4, nil, bigint{})
+        b, err := NewMatrix(4, 4, nil, bigint{})
         if err != nil {t.Error(err)}
         _, err = a.Concatenate(b)
         if err == nil {t.Error("no error on mismatched dimensions")}
@@ -255,18 +255,18 @@ func TestConcatenation(t *testing.T) {
 }
 
 func TestCrop(t *testing.T) {
-    a, err := NewBigMatrixFromInt(3, 3, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
+    a, err := NewMatrixFromInt(3, 3, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
     if err != nil {t.Error(err)}
     a = a.CropHorizontally(2)   
-    correct, err := NewBigMatrixFromInt(3, 2, []int{2, 3, 5, 6, 8, 9})
+    correct, err := NewMatrixFromInt(3, 2, []int{2, 3, 5, 6, 8, 9})
     if err != nil {t.Error(err)}
     Compare(a, correct, t)
 }
 
 func TestMod(t *testing.T) {
-    a, err := NewBigMatrixFromInt(3, 2, []int{9,4,6,3,8,6})
+    a, err := NewMatrixFromInt(3, 2, []int{9,4,6,3,8,6})
     if err != nil {t.Error(err)}
-    b, err := NewBigMatrixFromInt(3, 2, []int{0,1,0,0,2,0})
+    b, err := NewMatrixFromInt(3, 2, []int{0,1,0,0,2,0})
     if err != nil {t.Error(err)}
     a, err = a.Apply(func(val interface{}) (interface{}, error) {return new(big.Int).Mod(val.(*big.Int), big.NewInt(3)), nil})
     if err != nil {t.Error(err)}

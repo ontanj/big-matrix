@@ -1,4 +1,4 @@
-module github.com/ontanj/big-matrix
+module github.com/ontanj/generic-matrix
 
 go 1.15
 
