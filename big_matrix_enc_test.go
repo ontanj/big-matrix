@@ -105,7 +105,7 @@ func TestMultiplyPlaintextFactor(t *testing.T) {
     cs, djsks, err := NewDJCryptosystem()
     if err != nil {t.Error(err)}
     a, err = EncryptMatrix(a, cs.PubKey)
-    a, err = a.MultiplyPlaintextFactor(c)
+    a, err = a.Scale(c)
     if err != nil {t.Error(err)}
     a, err = DecryptMatrix(a, cs.PubKey, djsks)
     Compare(a, correct, t)

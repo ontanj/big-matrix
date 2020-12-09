@@ -229,7 +229,7 @@ func TestFactorMultiplication(t *testing.T) {
     b := big.NewInt(2)
     c, err := NewBigMatrixFromInt(2, 3, []int{6, 8, 4, 2, 16, 10})
     if err != nil {t.Error(err)}
-    d, err := a.MultiplyFactor(b)
+    d, err := a.MultiplyScalar(b)
     if err != nil {t.Error(err)}
     Compare(c, d, t)
 }

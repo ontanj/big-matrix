@@ -10,7 +10,7 @@ type BigMatrix struct {
     space space
 }
 
-// create a new BigMatrix with the given size and data, possible encrypted by cryptosystem cs (or nil)
+// create a new BigMatrix with the given size and data acting in space
 func NewBigMatrix(rows, cols int, data []interface{}, space space) (m BigMatrix, err error) {
     if data == nil {
         data = make([]interface{}, rows*cols)
@@ -48,8 +48,8 @@ func (m BigMatrix) Set(row, col int, value interface{}) error {
 }
 
 // multiply a * b
-// also handles multiplication of encrypted * unecrypted matrices or vice versa
-// if a and b are encrypted under different cryptosystems, the cryptosystem of a is used
+// also handles multiplication of scalar * non-scalar matrices and vice versa
+// if a and b are non-scalar in different spaces, the space of a is used
 func (a BigMatrix) Multiply(b BigMatrix) (c BigMatrix, err error) {
     if a.cols != b.rows {
         err = fmt.Errorf("matrices a and b are not compatible")
@@ -66,9 +66,9 @@ func (a BigMatrix) Multiply(b BigMatrix) (c BigMatrix, err error) {
                 a_val, err = a.At(i, k)
                 b_val, err = b.At(k, j)
                 if err != nil {return}
-                if a.space.IsPlaintext() {
+                if a.space.Scalarspace() {
                     space = b.space
-                    r, err = b.space.MultiplyScalar(b_val, a_val)
+                    r, err = b.space.Scale(b_val, a_val)
                     if err != nil {return a, err}
                     if sum == nil {
                         sum = r
@@ -78,8 +78,8 @@ func (a BigMatrix) Multiply(b BigMatrix) (c BigMatrix, err error) {
                     }
                 } else {
                     space = a.space
-                    if b.space.IsPlaintext() {
-                        r, err = a.space.MultiplyScalar(a_val, b_val)
+                    if b.space.Scalarspace() {
+                        r, err = a.space.Scale(a_val, b_val)
                         if err != nil {return a, err}
                     } else {
                         r, err = a.space.Multiply(a_val, b_val)
@@ -100,17 +100,16 @@ func (a BigMatrix) Multiply(b BigMatrix) (c BigMatrix, err error) {
     return NewBigMatrix(cRows, cCols, values, space)
 }
 
-// multiplication of a by a factor
-// assumes matrix and factor is in same space, otherwise use MultiplyPlaintextFactor
-func (a BigMatrix) MultiplyFactor(factor interface{}) (BigMatrix, error) {
-    two_val_mul := func (t1, t2 interface{}) (interface{}, error) {return a.space.Multiply(t1, t2)}
-    return scalarMultiplication(two_val_mul, a, factor)
+// multiplication of a by a scalar
+// assumes matrix and factor is in same space, otherwise use Scale
+func (a BigMatrix) MultiplyScalar(scalar interface{}) (BigMatrix, error) {
+    return scalarMultiplication(a.space.Multiply, a, scalar)
 }
 
-// multiplication of a by a factor
-// to be used if a is encrypted while factor is not
-func (a BigMatrix) MultiplyPlaintextFactor(factor interface{}) (BigMatrix, error) {
-    return scalarMultiplication(a.space.MultiplyScalar, a, factor)
+// scale a according to scalar
+// to be used if factor is in a scalar space wile a is not
+func (a BigMatrix) Scale(factor interface{}) (BigMatrix, error) {
+    return scalarMultiplication(a.space.Scale, a, factor)
 }
 
 func scalarMultiplication(mulfunc func(interface{}, interface{}) (interface{}, error), a BigMatrix, b interface{}) (BigMatrix, error) {

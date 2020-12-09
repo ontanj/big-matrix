@@ -20,8 +20,8 @@ func (pk dj_public_key) Subtract(a, b interface{}) (diff interface{}, err error)
     return pk.PubKey.Add(a.(*big.Int), neg)
 }
 
-func (pk dj_public_key) MultiplyScalar(ciphertext, constant interface{}) (product interface{}, err error) {
-    product, _, err = pk.PubKey.Multiply(ciphertext.(*big.Int), constant.(*big.Int))
+func (pk dj_public_key) Scale(ciphertext, factor interface{}) (product interface{}, err error) {
+    product, _, err = pk.PubKey.Multiply(ciphertext.(*big.Int), factor.(*big.Int))
     return
 }
 
@@ -29,7 +29,7 @@ func (pk dj_public_key) Multiply(a, b interface{}) (interface{}, error) {
     return nil, errors.New("multiplication not supported")
 }
 
-func (pk dj_public_key) IsPlaintext() bool {
+func (pk dj_public_key) Scalarspace() bool {
     return false
 }
 

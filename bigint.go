@@ -14,15 +14,15 @@ func (p bigint) Subtract(a, b interface{}) (interface{}, error) {
     return new(big.Int).Sub(a.(*big.Int), b.(*big.Int)), nil
 }
 
-func (p bigint) MultiplyScalar(ciphertext interface{}, plaintext interface{}) (interface{}, error) {
-    return p.Multiply(ciphertext.(*big.Int), plaintext.(*big.Int))
-}
-
 func (p bigint) Multiply(a, b interface{}) (interface{}, error) {
     return new(big.Int).Mul(a.(*big.Int), b.(*big.Int)), nil
 }
 
-func (p bigint) IsPlaintext() bool {
+func (p bigint) Scale(ciphertext interface{}, plaintext interface{}) (interface{}, error) {
+    return p.Multiply(ciphertext.(*big.Int), plaintext.(*big.Int))
+}
+
+func (p bigint) Scalarspace() bool {
     return true
 }
 
