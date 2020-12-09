@@ -12,8 +12,8 @@ The matrices are defined as
 ```go
 type Matrix struct {
     values []interface{}
-    rows, cols int
-    space space
+    Rows, Cols int
+    Space space
 }
 ```
 where values are stored in row-major order and `space` stores the evaluation space for the matrix.

@@ -6,8 +6,8 @@ import (
 
 type Matrix struct {
     values []interface{}
-    rows, cols int
-    space space
+    Rows, Cols int
+    Space space
 }
 
 // create a new Matrix with the given size and data acting in space
@@ -23,27 +23,27 @@ func NewMatrix(rows, cols int, data []interface{}, space space) (m Matrix, err e
         return
     }
     m.values = data
-    m.rows = rows
-    m.cols = cols
-    m.space = space
+    m.Rows = rows
+    m.Cols = cols
+    m.Space = space
     return
 }
 
 // get value at (row, col), where first row/col is 0.
 func (m Matrix) At(row, col int) (interface{}, error) {
-    if row >= m.rows || col >= m.cols || row < 0 || col < 0{
+    if row >= m.Rows || col >= m.Cols || row < 0 || col < 0{
         return nil, fmt.Errorf("Index out of bounds: (%d, %d)", row, col)
     }
-    valueIndex := m.cols*row + col
+    valueIndex := m.Cols*row + col
     return m.values[valueIndex], nil
 }
 
 // set value at (row, col), where first row/col is 0.
 func (m Matrix) Set(row, col int, value interface{}) error {
-    if row >= m.rows || col >= m.cols || row < 0 || col < 0 {
+    if row >= m.Rows || col >= m.Cols || row < 0 || col < 0 {
         return fmt.Errorf("Index out of bounds: (%d, %d)", row, col)
     }
-    m.values[m.cols*row + col] = value
+    m.values[m.Cols*row + col] = value
     return nil
 }
 
@@ -51,44 +51,44 @@ func (m Matrix) Set(row, col int, value interface{}) error {
 // also handles multiplication of scalar * non-scalar matrices and vice versa
 // if a and b are non-scalar in different spaces, the space of a is used
 func (a Matrix) Multiply(b Matrix) (c Matrix, err error) {
-    if a.cols != b.rows {
+    if a.Cols != b.Rows {
         err = fmt.Errorf("matrices a and b are not compatible")
         return
     }
-    cRows, cCols := a.rows, b.cols
+    cRows, cCols := a.Rows, b.Cols
     values := make([]interface{}, cRows*cCols)
     var r, a_val, b_val interface{}
     var space space
     for i := 0; i < cRows; i += 1 {
         for j := 0; j < cCols; j += 1 {
             var sum interface{}
-            for k := 0; k < a.cols; k += 1 {
+            for k := 0; k < a.Cols; k += 1 {
                 a_val, err = a.At(i, k)
                 b_val, err = b.At(k, j)
                 if err != nil {return}
-                if a.space.Scalarspace() {
-                    space = b.space
-                    r, err = b.space.Scale(b_val, a_val)
+                if a.Space.Scalarspace() {
+                    space = b.Space
+                    r, err = b.Space.Scale(b_val, a_val)
                     if err != nil {return a, err}
                     if sum == nil {
                         sum = r
                     } else {
-                        sum, err = b.space.Add(r, sum)
+                        sum, err = b.Space.Add(r, sum)
                         if err != nil {return a, err}
                     }
                 } else {
-                    space = a.space
-                    if b.space.Scalarspace() {
-                        r, err = a.space.Scale(a_val, b_val)
+                    space = a.Space
+                    if b.Space.Scalarspace() {
+                        r, err = a.Space.Scale(a_val, b_val)
                         if err != nil {return a, err}
                     } else {
-                        r, err = a.space.Multiply(a_val, b_val)
+                        r, err = a.Space.Multiply(a_val, b_val)
                         if err != nil {return a, err}
                     }
                     if sum == nil {
                         sum = r
                     } else {
-                        sum, err = a.space.Add(r, sum)
+                        sum, err = a.Space.Add(r, sum)
                         if err != nil {return a, err}
                     }
                 }
@@ -103,13 +103,13 @@ func (a Matrix) Multiply(b Matrix) (c Matrix, err error) {
 // multiplication of a by a scalar
 // assumes matrix and factor is in same space, otherwise use Scale
 func (a Matrix) MultiplyScalar(scalar interface{}) (Matrix, error) {
-    return scalarMultiplication(a.space.Multiply, a, scalar)
+    return scalarMultiplication(a.Space.Multiply, a, scalar)
 }
 
 // scale a according to scalar
 // to be used if factor is in a scalar space wile a is not
 func (a Matrix) Scale(factor interface{}) (Matrix, error) {
-    return scalarMultiplication(a.space.Scale, a, factor)
+    return scalarMultiplication(a.Space.Scale, a, factor)
 }
 
 func scalarMultiplication(mulfunc func(interface{}, interface{}) (interface{}, error), a Matrix, b interface{}) (Matrix, error) {
@@ -119,58 +119,58 @@ func scalarMultiplication(mulfunc func(interface{}, interface{}) (interface{}, e
         c_vals[i], err = mulfunc(a.values[i], b)
         if err != nil {return a, err}
     }
-    return NewMatrix(a.rows, a.cols, c_vals, a.space)
+    return NewMatrix(a.Rows, a.Cols, c_vals, a.Space)
 }
 
 // matrix addition
 func (a Matrix) Add(b Matrix) (c Matrix, err error) {
-    if a.rows != b.rows || a.cols != b.cols {
-        err = fmt.Errorf("dimension mismatch in addition: %d x %d != %d x %d", a.rows, a.cols, b.rows, b.cols)
+    if a.Rows != b.Rows || a.Cols != b.Cols {
+        err = fmt.Errorf("dimension mismatch in addition: %d x %d != %d x %d", a.Rows, a.Cols, b.Rows, b.Cols)
         return
     }
     c_vals := make([]interface{}, len(a.values))
     for i := range c_vals {
-        c_vals[i], err = a.space.Add(a.values[i], b.values[i])
+        c_vals[i], err = a.Space.Add(a.values[i], b.values[i])
         if err != nil {return a, err}
     }
-    return NewMatrix(a.rows, a.cols, c_vals, a.space)
+    return NewMatrix(a.Rows, a.Cols, c_vals, a.Space)
 }
 
 // matrix subtraction
 func (a Matrix) Subtract(b Matrix) (c Matrix, err error) {
-    if a.rows != b.rows || a.cols != b.cols {
-        err = fmt.Errorf("dimension mismatch in subtraction: %d x %d != %d x %d", a.rows, a.cols, b.rows, b.cols)
+    if a.Rows != b.Rows || a.Cols != b.Cols {
+        err = fmt.Errorf("dimension mismatch in subtraction: %d x %d != %d x %d", a.Rows, a.Cols, b.Rows, b.Cols)
         return
     }
     c_vals := make([]interface{}, len(a.values))
     for i := range c_vals {
-        c_vals[i], err = a.space.Subtract(a.values[i], b.values[i])
+        c_vals[i], err = a.Space.Subtract(a.values[i], b.values[i])
         if err != nil {return a, err}
     }
-    return NewMatrix(a.rows, a.cols, c_vals, a.space)
+    return NewMatrix(a.Rows, a.Cols, c_vals, a.Space)
 }
 
 // concatenate matrices as A|B
 func (a Matrix) Concatenate(b Matrix) (Matrix, error) {
-    if a.rows != b.rows {
-        return Matrix{}, fmt.Errorf("matrices not compatible for concatenation, a has %d rows while b has %d rows", a.rows, b.rows)
+    if a.Rows != b.Rows {
+        return Matrix{}, fmt.Errorf("matrices not compatible for concatenation, a has %d rows while b has %d rows", a.Rows, b.Rows)
     }
-    vals := make([]interface{}, 0, (a.cols + b.cols) * a.rows)
-    for i := 0; i < a.rows; i += 1 {
-        vals = append(vals, a.values[i*a.cols:(i+1)*a.cols]...)
-        vals = append(vals, b.values[i*b.cols:(i+1)*b.cols]...)
+    vals := make([]interface{}, 0, (a.Cols + b.Cols) * a.Rows)
+    for i := 0; i < a.Rows; i += 1 {
+        vals = append(vals, a.values[i*a.Cols:(i+1)*a.Cols]...)
+        vals = append(vals, b.values[i*b.Cols:(i+1)*b.Cols]...)
     }
-    return NewMatrix(a.rows, a.cols + b.cols, vals, a.space)
+    return NewMatrix(a.Rows, a.Cols + b.Cols, vals, a.Space)
 }
 
 // create a new matrix from last k columns of a
 func (a Matrix) CropHorizontally(k int) Matrix {
-    vals := make([]interface{}, 0, k*a.rows)
-    d := a.cols - k
-    for i := 0; i < a.rows; i += 1 {
-        vals = append(vals, a.values[i*a.cols+d:(i+1)*a.cols]...)
+    vals := make([]interface{}, 0, k*a.Rows)
+    d := a.Cols - k
+    for i := 0; i < a.Rows; i += 1 {
+        vals = append(vals, a.values[i*a.Cols+d:(i+1)*a.Cols]...)
     }
-    c, _ := NewMatrix(a.rows, k, vals, a.space)
+    c, _ := NewMatrix(a.Rows, k, vals, a.Space)
     return c
 }
 
@@ -181,5 +181,5 @@ func (a Matrix) Apply(f func(interface{}) (interface{}, error)) (b Matrix, err e
         b_vals[i], err = f(v)
         if err != nil {return}
     }
-    return NewMatrix(a.rows, a.cols, b_vals, a.space)
+    return NewMatrix(a.Rows, a.Cols, b_vals, a.Space)
 }

@@ -10,14 +10,14 @@ func decode(val interface{}, err error) (*big.Int, error) {
 }
 
 func Compare(a, b Matrix, t *testing.T) {
-    if a.cols != b.cols {
-        t.Errorf("differing number of columns (%d and %d)", a.cols, b.cols)
+    if a.Cols != b.Cols {
+        t.Errorf("differing number of columns (%d and %d)", a.Cols, b.Cols)
     }
-    if a.rows != b.rows {
-        t.Errorf("differing number of columns (%d and %d)", a.rows, b.rows)
+    if a.Rows != b.Rows {
+        t.Errorf("differing number of columns (%d and %d)", a.Rows, b.Rows)
     }
-    for i := 0; i < a.rows; i += 1 {
-        for j := 0; j < a.cols; j += 1 {
+    for i := 0; i < a.Rows; i += 1 {
+        for j := 0; j < a.Cols; j += 1 {
             a_val, _ := decode(a.At(i, j))
             b_val, _ := decode(b.At(i, j))
             if a_val.Cmp(b_val) != 0 {
@@ -38,10 +38,10 @@ func TestValidNewMatrix(t *testing.T) {
         }
         m, err := NewMatrix(3, 3, matrixData, bigint{})
         if err != nil {t.Error(err)}
-        if m.cols != 3 {
+        if m.Cols != 3 {
             t.Error("wrong column size")
         }
-        if m.rows != 3 {
+        if m.Rows != 3 {
             t.Error("wrong row size")
         }
         for row := 0; row < 3; row++ {
@@ -77,10 +77,10 @@ func TestValidNewMatrixFromInt(t *testing.T) {
         }
         m, err := NewMatrixFromInt(3, 3, matrixData)
         if err != nil {t.Error(err)}
-        if m.cols != 3 {
+        if m.Cols != 3 {
             t.Error("wrong column size")
         }
-        if m.rows != 3 {
+        if m.Rows != 3 {
             t.Error("wrong row size")
         }
         for i := 0; i < 9; i++ {
