@@ -12,7 +12,7 @@ func EncryptMatrix(a Matrix, pk *tcpaillier.PubKey) (b Matrix, err error) {
         b_vals[i], _, err = pk.Encrypt(a.values[i].(*big.Int))
         if err != nil {return}
     }
-    return NewMatrix(a.Rows, a.Cols, b_vals, dj_public_key{pk})
+    return NewMatrix(a.Rows, a.Cols, b_vals, DJ_public_key{pk})
 }
 
 func DecryptMatrix(cipher Matrix, pk *tcpaillier.PubKey, sks []*tcpaillier.KeyShare) (plain Matrix, err error) {
@@ -26,7 +26,7 @@ func DecryptMatrix(cipher Matrix, pk *tcpaillier.PubKey, sks []*tcpaillier.KeySh
         plain_vals[i], err = pk.CombineShares(part_dec...)
         if err != nil {return}
     }
-    return NewMatrix(cipher.Rows, cipher.Cols, plain_vals, bigint{})
+    return NewMatrix(cipher.Rows, cipher.Cols, plain_vals, Bigint{})
 }
 
 func TestEncryptedMatrixAddition(t *testing.T) {
