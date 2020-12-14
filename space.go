@@ -1,6 +1,6 @@
 package genmatrix
 
-type space interface {
+type Space interface {
 
     // addition of two elements in the space
     Add(interface{}, interface{}) (sum interface{}, err error)

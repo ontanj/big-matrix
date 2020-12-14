@@ -7,11 +7,11 @@ import (
 type Matrix struct {
     values []interface{}
     Rows, Cols int
-    Space space
+    Space Space
 }
 
 // create a new Matrix with the given size and data acting in space
-func NewMatrix(rows, cols int, data []interface{}, space space) (m Matrix, err error) {
+func NewMatrix(rows, cols int, data []interface{}, space Space) (m Matrix, err error) {
     if data == nil {
         data = make([]interface{}, rows*cols)
     } else if rows * cols != len(data) {
@@ -58,7 +58,7 @@ func (a Matrix) Multiply(b Matrix) (c Matrix, err error) {
     cRows, cCols := a.Rows, b.Cols
     values := make([]interface{}, cRows*cCols)
     var r, a_val, b_val interface{}
-    var space space
+    var space Space
     for i := 0; i < cRows; i += 1 {
         for j := 0; j < cCols; j += 1 {
             var sum interface{}
