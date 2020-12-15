@@ -2,24 +2,44 @@ package genmatrix
 
 import (
     "math/big"
+    "fmt"
+    "reflect"
 )
 
 type Bigint struct {}
 
+func assertBigint(a, b interface{}) error {
+    if reflect.TypeOf(a) != reflect.TypeOf(new(big.Int)) {
+        return fmt.Errorf("first operator is not *big.Int, but %T", a)
+    } 
+    if reflect.TypeOf(b) != reflect.TypeOf(new(big.Int)) {
+        return fmt.Errorf("second operator is not *big.Int, but %T", b)    
+    }
+    return nil
+}
+
 func (p Bigint) Add(a, b interface{}) (interface{}, error) {
+    err := assertBigint(a, b)
+    if err != nil {return nil, err}
     return new(big.Int).Add(a.(*big.Int), b.(*big.Int)), nil
 }
 
 func (p Bigint) Subtract(a, b interface{}) (interface{}, error) {
+    err := assertBigint(a, b)
+    if err != nil {return nil, err}
     return new(big.Int).Sub(a.(*big.Int), b.(*big.Int)), nil
 }
 
 func (p Bigint) Multiply(a, b interface{}) (interface{}, error) {
+    err := assertBigint(a, b)
+    if err != nil {return nil, err}
     return new(big.Int).Mul(a.(*big.Int), b.(*big.Int)), nil
 }
 
-func (p Bigint) Scale(ciphertext interface{}, plaintext interface{}) (interface{}, error) {
-    return p.Multiply(ciphertext.(*big.Int), plaintext.(*big.Int))
+func (p Bigint) Scale(a interface{}, b interface{}) (interface{}, error) {
+    err := assertBigint(a, b)
+    if err != nil {return nil, err}
+    return p.Multiply(a.(*big.Int), b.(*big.Int))
 }
 
 func (p Bigint) Scalarspace() bool {
