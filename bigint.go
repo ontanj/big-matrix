@@ -30,6 +30,10 @@ func (p Bigint) Subtract(a, b interface{}) (interface{}, error) {
     return new(big.Int).Sub(a.(*big.Int), b.(*big.Int)), nil
 }
 
+func (p Bigint) Negate(a interface{}) (interface{}, error) {
+    return new(big.Int).Mul(big.NewInt(-1), a.(*big.Int)), nil
+}
+
 func (p Bigint) Multiply(a, b interface{}) (interface{}, error) {
     err := assertBigint(a, b)
     if err != nil {return nil, err}
@@ -57,4 +61,14 @@ func NewMatrixFromInt(rows, cols int, data []int) (Matrix, error) {
         s[i] = big.NewInt(int64(data[i]))
     }
     return NewMatrix(rows, cols, s, Bigint{})
+}
+
+// create a new polynomial from int values
+func NewPolyFromInt(data []int) (Polynomial, error) {
+    l := len(data)
+    s := make([]interface{}, l)
+    for i := 0; i < l; i += 1 {
+        s[i] = big.NewInt(int64(data[i]))
+    }
+    return NewPolynomial(s, Bigint{})
 }

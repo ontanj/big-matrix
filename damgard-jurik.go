@@ -24,6 +24,11 @@ func (pk DJ_public_key) Subtract(a, b interface{}) (diff interface{}, err error)
     return pk.PubKey.Add(a.(*big.Int), neg)
 }
 
+func (pk DJ_public_key) Negate(a interface{}) (neg interface{}, err error) {
+    neg, _, err = pk.PubKey.Multiply(a.(*big.Int), big.NewInt(-1))
+    return
+}
+
 func (pk DJ_public_key) Scale(ciphertext, factor interface{}) (product interface{}, err error) {
     err = assertBigint(ciphertext, factor)
     if err != nil {return}

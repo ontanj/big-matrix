@@ -8,6 +8,9 @@ type Space interface {
     // subtraction of two elements in the space
     Subtract(interface{}, interface{}) (diff interface{}, err error)
 
+    // negate element
+    Negate(interface{}) (neg interface{}, err error)
+
     // multiplication of two elements in the space
     Multiply(interface{}, interface{}) (product interface{}, err error)
 
